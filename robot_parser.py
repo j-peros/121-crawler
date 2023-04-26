@@ -1,5 +1,6 @@
 import urllib.request
 import io
+import re
 
 class Robot_Parse:
     def __init__(self, url):
@@ -7,6 +8,7 @@ class Robot_Parse:
         self.url = url
         self.made_request = False
         self.no_crawl = []
+        self.can_crawl = []
         if self.url[-10:] == "robots.txt":
             self.inserted_robots = True
             self.url_copy = self.url_copy[:-11]
@@ -31,8 +33,10 @@ class Robot_Parse:
             if lines.startswith("User-agent: *") or lines.startswith("User-Agent: *"):
                 crawl_mode = True
             if crawl_mode and lines.startswith("Disallow: /"):
-                self.no_crawl.append(self.url_copy + lines[10:])
-            if lines == "\n":
+                self.no_crawl.append(self.url_copy + lines[10:].rstrip())
+            if crawl_mode and lines.startswith("Allow: /"):
+                self.can_crawl.append(self.url_copy + lines[10:].rstrip())
+            if crawl_mode and lines == "\n":
                 break
         
     def original_url(self):
@@ -40,9 +44,12 @@ class Robot_Parse:
 
     def no_crawl_links(self):
         return self.no_crawl
+
+    def can_crawl_links(self):
+        return self.can_crawl
 if __name__ == "__main__":
-    save = Robot_Parse("https://www.google.com/robots.txt")
+    save = Robot_Parse("https://www.reddit.com/robots.txt")
     save.robots_request()
     save.robots_read()
-    print(save.no_crawl_links())
+    print(save.can_crawl_links())
     
