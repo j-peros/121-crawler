@@ -6,8 +6,10 @@ class Robot_Parse:
         self.url_copy = url
         self.url = url
         self.made_request = False
+        self.no_crawl = []
         if self.url[-10:] == "robots.txt":
             self.inserted_robots = True
+            self.url_copy = self.url_copy[:-11]
         else:
             self.inserted_robots = False
 
@@ -24,12 +26,23 @@ class Robot_Parse:
         self.data = io.TextIOWrapper(web_request, encoding='utf-8')
         
     def robots_read(self):
-        print(self.data.read())
-
+        crawl_mode = False
+        for lines in self.data:
+            if lines.startswith("User-agent: *") or lines.startswith("User-Agent: *"):
+                crawl_mode = True
+            if crawl_mode and lines.startswith("Disallow: /"):
+                self.no_crawl.append(self.url_copy + lines[10:])
+            if lines == "\n":
+                break
+        
     def original_url(self):
         return self.url_copy
+
+    def no_crawl_links(self):
+        return self.no_crawl
 if __name__ == "__main__":
-    save = Robot_Parse("https://www.reddit.com/robots.txt")
+    save = Robot_Parse("https://www.google.com/robots.txt")
     save.robots_request()
     save.robots_read()
+    print(save.no_crawl_links())
     

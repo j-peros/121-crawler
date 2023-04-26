@@ -4,6 +4,7 @@ class Unique:
     ignoring the fragmented parts of the url, and
     counts the number of unique urls.
     """
+
     def __init__(self):
         """
         Initializer will set up a url set container
