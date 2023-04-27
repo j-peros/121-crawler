@@ -1,7 +1,9 @@
 import urllib.request
 import io
-
+import os
+from urllib.parse import urlparse
 class Robot_Parse:
+    robots_dict = {} #key of unique domains and mapped to a list of disallowed links
     """
     The Robot_Parse class is used primarily
     for reading and parsing robots.txt files
@@ -12,12 +14,14 @@ class Robot_Parse:
         contains robots.txt in the path. If it does, then calling
         insert_robots function will not be necessary. Otherwise, we need to call insert_robots.
         """
-        self.url_copy = url #url to access again
         self.url = url #change the url depending if the url has a robots.txt in the path
         self.disallow_crawl = [] #list of links to not crawl
         self.allow_crawl = [] # list of links to crawl
         if self.url[-10:] != "robots.txt": # condition to see if it ends with robots.txt
             self.insert_robots()
+            self.url_copy = url #url without the robots.txt
+        else:
+            self.url_copy = url[:-10]
         
     def insert_robots(self) -> None:
         """
@@ -44,7 +48,7 @@ class Robot_Parse:
         as a re expression. This can be used to match such
         expressions with other links.
         """
-        ast_replace = "\\S*" # used to replace the asterix character
+        ast_replace = "\S*" # used to replace the asterix character
         crawl_mode = False # Used to only look at user-agent: *
         
         for lines in self.data: #loop through the robots.txt file
@@ -83,8 +87,9 @@ class Robot_Parse:
                 break
         
     def original_url(self) -> str:
-        #returns the original link
+        #returns the original link without the robots.txt
         return self.url_copy
+     
 
     def disallow_crawl_links(self) -> list:
         #returns a list of links that denies crawling
@@ -94,11 +99,21 @@ class Robot_Parse:
         # returns a list of links that allows crawling
         return self.allow_crawl
 
-if __name__ == "__main__":
-    save = Robot_Parse("https://www.google.com")
-    save.robots_request()
-    save.robots_read()
-    print(save.allow_crawl_links())
+    def sep_root_domain(self) -> str:
+        # This function separates the link to only return the scheme and domain
+        parse_link = urlparse(self.url_copy)
+        return os.path.join(parse_link.scheme + ":", parse_link.netloc)
+    
+    def check_existing_links(self):
+        
 
+def matching_robots(link: str) -> bool:
+    parse_robots = Robot_Parse(link)
+    parse_robots.robots_request()
+    parse_robots.robots_read()
+
+if __name__ == "__main__":
+    
+    
 
     
