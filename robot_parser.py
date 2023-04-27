@@ -1,6 +1,5 @@
 import urllib.request
 import io
-import re
 
 class Robot_Parse:
     def __init__(self, url):
@@ -28,14 +27,37 @@ class Robot_Parse:
         self.data = io.TextIOWrapper(web_request, encoding='utf-8')
         
     def robots_read(self):
+        ast_replace = "\\S*"
         crawl_mode = False
         for lines in self.data:
             if lines.startswith("User-agent: *") or lines.startswith("User-Agent: *"):
                 crawl_mode = True
             if crawl_mode and lines.startswith("Disallow: /"):
-                self.no_crawl.append(self.url_copy + lines[10:].rstrip())
+                insert_line = ""
+                line = lines[10:].rstrip()
+                for char in line:
+                    if char == "*":
+                        insert_line += ast_replace
+                    else:
+                        insert_line += char
+                if (line[-1] == "$"):
+                    self.no_crawl.append(self.url_copy + "(" + insert_line[:-1] + ")$")
+                else:
+                    self.no_crawl.append(self.url_copy + insert_line)
+
             if crawl_mode and lines.startswith("Allow: /"):
-                self.can_crawl.append(self.url_copy + lines[10:].rstrip())
+                insert_line = ""
+                line = lines[7:].rstrip()
+                for char in line:
+                    if char == "*":
+                        insert_line += ast_replace
+                    else:
+                        insert_line += char
+                if (line[-1] == "$"):
+                    self.can_crawl.append(self.url_copy + "(" + insert_line[:-1] + ")$")
+                else:
+                    self.can_crawl.append(self.url_copy + insert_line)
+    
             if crawl_mode and lines == "\n":
                 break
         
@@ -51,5 +73,8 @@ if __name__ == "__main__":
     save = Robot_Parse("https://www.reddit.com/robots.txt")
     save.robots_request()
     save.robots_read()
-    print(save.can_crawl_links())
+    for i in save.can_crawl_links():
+        print(i)
+
+
     
