@@ -3,16 +3,27 @@ from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 from maxWordCount import *
 from ics_subdomains import icsSubdomains
+from low_text_info import low_textual_content
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
     return [link for link in links if is_valid(link)]
 
 def extract_next_links(url, resp):
-    if resp.status != 200:
-        pass # do something here
+    if resp.status != 200 or resp.raw_response.content is None:
+        return list()
+    
     soup = BeautifulSoup(resp.raw_response.content, "html.parser")
     extracted_links = set()
+
+    tokenLst = maxWord.tokenizer(soup)
+
+    if not low_textual_content(tokenLst, soup.find_all()):
+        return list() # this page has low textual content
+
+    for link in soup.find_all('a'):
+        cur_url = link.get('href')
+        extracted_links.add(cur_url)
     # Implementation required.
     # url: the URL that was used to get the page
     # resp.url: the actual url of the page
@@ -25,7 +36,7 @@ def extract_next_links(url, resp):
     # maxWord object to keep track of maxWords over all the webpages.
     maxWord = maxWordCount()
     # tokenLst of all tokens of the current webpage being crawled.
-    tokenLst = maxWord.tokenizer(soup)
+    tokenLst = maxWord.tokenizer(soup.get_text)
     # Updates the maxWordCount if current webpage
     # has more words than the recorded maxWords.
     maxWord.updateURL(tokenLst, resp.url)
@@ -33,14 +44,8 @@ def extract_next_links(url, resp):
     # print("MaxLenght recoredd:", maxWord.maxWords)
     # print("current URL", resp.url)
     # print("url of longest page", maxWord.longestURL)
-    extracted_links = set()
-    soup = BeautifulSoup(resp.raw_response.content, "html.parser")
-    for link in soup.find_all('a'):
-        cur_url = link.get('href')
-        extracted_links.add(cur_url[:cur_url.find('#')])
-        
     return list(extracted_links)
-
+        
 def is_valid(url):
     # Decide whether to crawl this url or not. 
     # If you decide to crawl it, return True; otherwise return False.
