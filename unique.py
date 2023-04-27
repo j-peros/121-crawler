@@ -7,11 +7,11 @@ class Unique:
 
     url_set = set()
     url_counter = 0
-        """
-        Initializer will set up a url set container
-        that stores all the unique urls and initialize the
-        unique url counter to 0.
-        """
+    """
+    Initializer will set up a url set container
+    that stores all the unique urls and initialize the
+    unique url counter to 0.
+    """
 
     @classmethod
     def remove_fragment(cls, url:str):

@@ -7,5 +7,5 @@ def low_textual_content(tokenLst: list, tagLst: list, *, decimal_percentage:int 
         return False
     elif (len_html / total_len) > decimal_percentage: # html makes up > decimal_percentage (i.e. 0.97) of all text
         return False
-    else # can be considered non-low textual content
+    else: # can be considered non-low textual content
         return True

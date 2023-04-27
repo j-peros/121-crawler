@@ -11,12 +11,15 @@ def scraper(url, resp):
     return [link for link in links if is_valid(link)]
 
 def extract_next_links(url, resp):
+    if resp.status >= 300 and resp.status < 400:
+        pass
     if resp.status != 200 or resp.raw_response.content is None:
         return list()
     
     soup = BeautifulSoup(resp.raw_response.content, "html.parser")
     extracted_links = set()
 
+    maxWord = maxWordCount()
     tokenLst = maxWord.tokenizer(soup)
 
     if not low_textual_content(tokenLst, soup.find_all()):
@@ -35,9 +38,7 @@ def extract_next_links(url, resp):
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
     # maxWord object to keep track of maxWords over all the webpages.
-    maxWord = maxWordCount()
     # tokenLst of all tokens of the current webpage being crawled.
-    tokenLst = maxWord.tokenizer(soup.get_text)
     # Updates the maxWordCount if current webpage
     # has more words than the recorded maxWords.
     maxWord.updateURL(tokenLst, resp.url)
@@ -51,6 +52,8 @@ def is_valid(url):
     # Decide whether to crawl this url or not. 
     # If you decide to crawl it, return True; otherwise return False.
     # There are already some conditions that return False.
+    if url is None:
+        return False
     try:
         url = unique.Unique.remove_fragment(url) # remove fragment from url
         parsed = urlparse(url)
