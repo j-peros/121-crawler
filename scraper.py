@@ -11,6 +11,21 @@ def scraper(url, resp):
     return [link for link in links if is_valid(link)]
 
 def extract_next_links(url, resp):
+    # Implementation required.
+    # url: the URL that was used to get the page
+    # resp.url: the actual url of the page
+    # resp.status: the status code returned by the server. 200 is OK, you got the page. Other numbers mean that there was some kind of problem.
+    # resp.error: when status is not 200, you can check the error here, if needed.
+    # resp.raw_response: this is where the page actually is. More specifically, the raw_response has two parts:
+    #         resp.raw_response.url: the url, again
+    #         resp.raw_response.content: the content of the page!
+    # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
+    
+    # maxWord object to keep track of maxWords over all the webpages.
+    # tokenLst of all tokens of the current webpage being crawled.
+    # Updates the maxWordCount if current webpage
+    # has more words than the recorded maxWords.
+    
     if resp.status >= 300 and resp.status < 400:
         pass
     if resp.status != 200 or resp.raw_response.content is None:
@@ -24,36 +39,21 @@ def extract_next_links(url, resp):
 
     if not low_textual_content(tokenLst, soup.find_all()):
         return list() # this page has low textual content
-
+    
+    maxWord.updateURL(tokenLst, resp.url)
+    extracted_links = set()
     for link in soup.find_all('a'):
         cur_url = link.get('href')
-        extracted_links.add(cur_url)
-    # Implementation required.
-    # url: the URL that was used to get the page
-    # resp.url: the actual url of the page
-    # resp.status: the status code returned by the server. 200 is OK, you got the page. Other numbers mean that there was some kind of problem.
-    # resp.error: when status is not 200, you can check the error here, if needed.
-    # resp.raw_response: this is where the page actually is. More specifically, the raw_response has two parts:
-    #         resp.raw_response.url: the url, again
-    #         resp.raw_response.content: the content of the page!
-    # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
-    # maxWord object to keep track of maxWords over all the webpages.
-    # tokenLst of all tokens of the current webpage being crawled.
-    # Updates the maxWordCount if current webpage
-    # has more words than the recorded maxWords.
-    maxWord.updateURL(tokenLst, resp.url)
-    # print("TokenLst length:", len(tokenLst))
-    # print("MaxLenght recoredd:", maxWord.maxWords)
-    # print("current URL", resp.url)
-    # print("url of longest page", maxWord.longestURL)
+        if cur_url is None:
+            continue
+        extracted_links.add(cur_url[:cur_url.find('#')])
+       
     return list(extracted_links)
         
 def is_valid(url):
     # Decide whether to crawl this url or not. 
     # If you decide to crawl it, return True; otherwise return False.
     # There are already some conditions that return False.
-    if url is None:
-        return False
     try:
         url = unique.Unique.remove_fragment(url) # remove fragment from url
         parsed = urlparse(url)
