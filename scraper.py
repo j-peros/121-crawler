@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from maxWordCount import *
 from ics_subdomains import icsSubdomains
 from low_text_info import low_textual_content
+import unique
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
@@ -51,6 +52,7 @@ def is_valid(url):
     # If you decide to crawl it, return True; otherwise return False.
     # There are already some conditions that return False.
     try:
+        url = unique.Unique.remove_fragment(url) # remove fragment from url
         parsed = urlparse(url)
         if parsed.scheme not in set(["http", "https"]):
             return False
