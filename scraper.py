@@ -13,9 +13,6 @@ def extract_next_links(url, resp):
         pass # do something here
     soup = BeautifulSoup(resp.raw_response.content, "html.parser")
     extracted_links = set()
-    for link in soup.find_all('a'):
-        cur_url = link.get('href')
-        extracted_links.add(cur_url)
     # Implementation required.
     # url: the URL that was used to get the page
     # resp.url: the actual url of the page
