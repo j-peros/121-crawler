@@ -1,7 +1,8 @@
 import urllib.request, io, os, re
 from urllib.parse import urlparse
 class Robot_Parse:
-    robots_dict = {} #key of unique domains and mapped to a list of disallowed links
+    robots_dis = {} #key of unique domains and mapped to a list of disallowed links
+    robots_all = {}
     """
     The Robot_Parse class is used primarily
     for reading and parsing robots.txt files
@@ -15,11 +16,9 @@ class Robot_Parse:
         self.url = self.sep_root_domain(url) #change the url depending if the url has a robots.txt in the path
         self.disallow_crawl = [] #list of links to not crawl
         self.allow_crawl = [] # list of links to crawl
-        if self.url[-10:] != "robots.txt": # condition to see if it ends with robots.txt
-            self.insert_robots()
-            self.url_copy = self.url #url without the robots.txt
-        else:
-            self.url_copy = self.url[:-10]
+        self.url_copy = self.url #url without the robots.txt
+        self.insert_robots()
+
         
     def insert_robots(self) -> None:
         """
@@ -115,27 +114,50 @@ class Robot_Parse:
         return parse_link.scheme + "://" + parse_link.netloc
 
 def matching_robots(link: str) -> bool:
+    call_parser = Robot_Parse(link)
+    parser_disallow = disallowed(link, call_parser) #initiliazes the robot_parser class
+    parser_allow = allowed(link, call_parser)
 
-    parse_robots = Robot_Parse(link)
-    root_url = parse_robots.sep_root_domain(link)
-    if root_url in parse_robots.robots_dict.keys():
-        for links in parse_robots.robots_dict[root_url]:
-            if re.match(links, link):
+    print(parser_allow)
+    
+    # if parser_disallow and not parser_allow:
+    #     return False
+    # else:
+    #     return True
+
+def disallowed(link, parse_robots):
+    root_url = parse_robots.sep_root_domain(link) #gets the root path
+    if root_url in parse_robots.robots_dis.keys(): #determines if the root path already exists in dict
+        for links in parse_robots.robots_dis[root_url]: #loops through the disallowed links
+            if re.match(links, link): #matches the disallowed link to given link
                 return True
     else:
-        parse_robots.robots_request()
-        parse_robots.robots_read()
-        parse_robots.robots_dict[parse_robots] = parse_robots.disallow_crawl_links()
-        for links in parse_robots.disallow_crawl_links():
-            print(links)
-            if re.match(links, link):
+        parse_robots.robots_request() #server creates a new request to the web
+        parse_robots.robots_read() #reads the robots.txt file
+        parse_robots.robots_dis[parse_robots] = parse_robots.disallow_crawl_links() #adds a disallowed list
+        for links in parse_robots.disallow_crawl_links(): #loops through disallowed links
+            if re.match(links, link): #sees if the disallowed link matches
                 return True
-
-    
+    #no links that matches
     return False
 
+def allowed(link, parse_robots):
+    root_url = parse_robots.sep_root_domain(link) #gets the root path
+    if root_url in parse_robots.robots_all.keys(): #determines if the root path already exists in dict
+        for links in parse_robots.robots_all[root_url]: #loops through the allowed links
+            if re.match(links, link): #matches the allowed link to given link
+                return True
+    else:
+        parse_robots.robots_request() #server creates a new request to the web
+        parse_robots.robots_read()#reads the robots.txt file
+        parse_robots.robots_all[parse_robots] = parse_robots.allow_crawl_links() #adds a allowed list
+        for links in parse_robots.allow_crawl_links(): #loops through allowed links
+            if re.match(links, link): #sees if the allowed link matches
+                return True
+    #no links that matches
+    return False
 if __name__ == "__main__":
-    print(matching_robots("https://www.stat.uci.edu/wp-admin/"))
+    pass
     
    
     
