@@ -2,10 +2,11 @@ import hashlib
 
 class simHash():
     # tokenDict = {"token": [0, "hashValue"]}
-    # The token dict is of the form where the key is the token from the tokenLst, and the 
-    # value is a list of 2 elements. On index 0, we have the frequency/weight of the token, and 
+    # The token dict is of the form where the key is the token from the tokenLst, and the
+    # value is a list of 2 elements. On index 0, we have the frequency/weight of the token, and
     # on index 1 we have the hashEncoding corresponding to the token. 
     tokenDict = dict()
+    simHashSet = set()
     
     
     def hashConverter(self, integerHash: str) -> str:
@@ -68,12 +69,13 @@ class simHash():
     
     def similarityChecker(self, simhash1: str, simhash2: str) -> bool:
         similarityIndex = 0
-        thresholdLevel = 0.9
+        thresholdLevel = 0.875
         for index in range(len(simhash1)):
             # Find the similarityIndex given simhashes of 2 different webpages.
             if simhash1[index] == simhash2[index]: similarityIndex += 1
         # return a boolean value relative to the threshold value.
-        if similarityIndex/8 >= thresholdLevel: return True
+        similarityRatio = similarityIndex/8
+        if similarityRatio >= thresholdLevel: return True
         else: return False
             
     
