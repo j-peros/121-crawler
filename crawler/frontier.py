@@ -5,7 +5,7 @@ from threading import Thread, RLock
 from queue import Queue, Empty
 
 from utils import get_logger, get_urlhash, normalize
-from scraper import is_valid
+from scraper import is_valid, read_freq_from_file
 from write_save_files import restarting_crawler
 
 class Frontier(object):
@@ -28,6 +28,7 @@ class Frontier(object):
         self.save = shelve.open(self.config.save_file)
         if restart:
             restarting_crawler() # reload save data if this is a restart
+            read_freq_from_file()
             for url in self.config.seed_urls:
                 self.add_url(url)
         else:

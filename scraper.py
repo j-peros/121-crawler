@@ -61,8 +61,6 @@ def extract_next_links(url, resp):
                 word_counter[t] = 1
     
     dogs = top_words()
-    for d in dogs:
-        print(d)
     maxWord.updateURL(filteredLst, resp.url)
     
     maxWord.updateURL(tokenLst, resp.url)
@@ -73,7 +71,10 @@ def extract_next_links(url, resp):
             continue
         extracted_links.add(cur_url[:cur_url.find('#')])
        
-    Counter.count_pages() # increment counter, write to files if necessary
+    if Counter.count_pages(): # increment counter, write to files if necessary
+        write_words_to_file()
+        # write local variable to a txt file
+    # print(Counter.count)
     return list(extracted_links)
         
 def is_valid(url):
@@ -105,3 +106,16 @@ def is_valid(url):
 def top_words():
     sorted_words = sorted(word_counter.items(), key=lambda item: -item[1])
     return sorted_words[0:50]
+
+def write_words_to_file(filename: str = "frequency.txt"):
+    # written here to have access to local variable word_counter
+    with open(filename, "w") as f:
+        for key in word_counter:
+            f.write(f"{key}\t{word_counter[key]}")
+
+def read_freq_from_file(filename: str = "frequency.txt"):
+    # written here to have access to local variable word_counter
+    with open(filename, "r") as f:
+        for line in f:
+            line = line.split('\t')
+            word_counter[line[0]] = int(line[1])

@@ -21,7 +21,6 @@ class Counter:
 
 def save_to_file() -> None:
     """ Saves files of all data in case of restart """
-    print("\n\n This ran \n\n")
     with open("unique_save.txt", "w") as f:
         f.write(f"{unique.Unique.url_counter}\n")
         f.writelines(unique.Unique.url_set)
