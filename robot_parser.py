@@ -1,7 +1,8 @@
-import urllib.request
-import io
-
+import urllib.request, io, os, re
+from urllib.parse import urlparse
 class Robot_Parse:
+    robots_dis = {} #key of unique domains and mapped to a list of disallowed links
+    robots_all = {}
     """
     The Robot_Parse class is used primarily
     for reading and parsing robots.txt files
@@ -12,12 +13,12 @@ class Robot_Parse:
         contains robots.txt in the path. If it does, then calling
         insert_robots function will not be necessary. Otherwise, we need to call insert_robots.
         """
-        self.url_copy = url #url to access again
-        self.url = url #change the url depending if the url has a robots.txt in the path
+        self.url = self.sep_root_domain(url) #change the url depending if the url has a robots.txt in the path
         self.disallow_crawl = [] #list of links to not crawl
         self.allow_crawl = [] # list of links to crawl
-        if self.url[-10:] != "robots.txt": # condition to see if it ends with robots.txt
-            self.insert_robots()
+        self.url_copy = self.url #url without the robots.txt
+        self.insert_robots()
+
         
     def insert_robots(self) -> None:
         """
@@ -44,7 +45,7 @@ class Robot_Parse:
         as a re expression. This can be used to match such
         expressions with other links.
         """
-        ast_replace = "\\S*" # used to replace the asterix character
+        ast_replace = "(\S*)" # used to replace the asterix character
         crawl_mode = False # Used to only look at user-agent: *
         
         for lines in self.data: #loop through the robots.txt file
@@ -52,39 +53,52 @@ class Robot_Parse:
             if lines.startswith("User-agent: *") or lines.startswith("User-Agent: *"):
                 crawl_mode = True #turned to true once we reach the info about our crawler
             if crawl_mode and lines.startswith("Disallow: /"):
-                line = lines[10:].rstrip() #get rid of the "Disallow" /"
+                line = lines[11:].rstrip() #get rid of the "Disallow" /"
                 for char in line:
                     if char == "*":
                         insert_line += ast_replace #replace the asterix with our re expression
+                    elif char == ".":
+                        insert_line += "[.]"
+                    elif char == "?":
+                        insert_line += "[?]"
+                    elif char == "^":
+                        insert_line += "[^]"
                     else:
                         insert_line += char #include the char
                 #add the link to the disallowed list
                 if (line[-1] == "$"): #$ means that the expression must be at the end of the path
                     #expression so that this matches the subpath only at the end
-                    self.disallow_crawl.append(self.url_copy + "(" + insert_line[:-1] + ")$")
+                    self.disallow_crawl.append(os.path.join(self.url_copy, "(" + insert_line[:-1] + ")$"))
                 else:
-                    self.disallow_crawl.append(self.url_copy + insert_line)
+                    self.disallow_crawl.append(os.path.join(self.url_copy, insert_line))
 
             if crawl_mode and lines.startswith("Allow: /"):
-                line = lines[7:].rstrip() #get rid of the "Disallow" /"
+                line = lines[8:].rstrip() #get rid of the "Disallow" /"
                 for char in line:
                     if char == "*":
                         insert_line += ast_replace #replace the asterix with our re expression
+                    elif char == ".":
+                        insert_line += "[.]"
+                    elif char == "?":
+                        insert_line += "[?]"
+                    elif char == "^":
+                        insert_line += "[^]"
                     else:
                         insert_line += char #include the char
                 #add the link to the disallowed list
-                if (line[-1] == "$"): #$ means that the expression must be at the end of the path
+                if (lines.rstrip()[-1] == "$"): #$ means that the expression must be at the end of the path
                     #expression so that this matches the subpath only at the end
-                    self.allow_crawl.append(self.url_copy + "(" + insert_line[:-1] + ")$")
+                    self.allow_crawl.append(os.path.join(self.url_copy, "(" + insert_line[:-1] + ")$"))
                 else:
-                    self.allow_crawl.append(self.url_copy + insert_line)
+                    self.allow_crawl.append(os.path.join(self.url_copy, insert_line))
     
             if crawl_mode and lines == "\n": #done parsing
                 break
         
     def original_url(self) -> str:
-        #returns the original link
+        #returns the original link without the robots.txt
         return self.url_copy
+     
 
     def disallow_crawl_links(self) -> list:
         #returns a list of links that denies crawling
@@ -94,11 +108,54 @@ class Robot_Parse:
         # returns a list of links that allows crawling
         return self.allow_crawl
 
+    def sep_root_domain(self, given_url: str) -> str:
+        # This function separates the link to only return the scheme and domain
+        parse_link = urlparse(given_url)
+        return parse_link.scheme + "://" + parse_link.netloc
+
+def matching_robots(link: str) -> bool:
+    call_parser = Robot_Parse(link)
+    parser_disallow = disallowed(link, call_parser) #initiliazes the robot_parser class
+    parser_allow = allowed(link, call_parser)
+
+    if parser_disallow and not parser_allow:
+        return False
+    else:
+        return True
+
+def disallowed(link, parse_robots):
+    root_url = parse_robots.sep_root_domain(link) #gets the root path
+    if root_url in parse_robots.robots_dis.keys(): #determines if the root path already exists in dict
+        for links in parse_robots.robots_dis[root_url]: #loops through the disallowed links
+            if re.match(links, link): #matches the disallowed link to given link
+                return True
+    else:
+        parse_robots.robots_request() #server creates a new request to the web
+        parse_robots.robots_read() #reads the robots.txt file
+        parse_robots.robots_dis[parse_robots] = parse_robots.disallow_crawl_links() #adds a disallowed list
+        for links in parse_robots.disallow_crawl_links(): #loops through disallowed links
+            if re.match(links, link): #sees if the disallowed link matches
+                return True
+    #no links that matches
+    return False
+
+def allowed(link, parse_robots):
+    root_url = parse_robots.sep_root_domain(link) #gets the root path
+    if root_url in parse_robots.robots_all.keys(): #determines if the root path already exists in dict
+        for links in parse_robots.robots_all[root_url]: #loops through the allowed links
+            if re.match(links, link) and links[-1] != "/": #matches the allowed link to given link
+                return True
+    else:
+        parse_robots.robots_request() #server creates a new request to the web
+        parse_robots.robots_read()#reads the robots.txt file
+        parse_robots.robots_all[parse_robots] = parse_robots.allow_crawl_links() #adds a allowed list
+        for links in parse_robots.allow_crawl_links(): #loops through allowed links
+            if re.match(links, link) and links[-1] != "/": #sees if the allowed link matches
+                return True
+    #no links that matches
+    return False
 if __name__ == "__main__":
-    save = Robot_Parse("https://www.google.com")
-    save.robots_request()
-    save.robots_read()
-    print(save.allow_crawl_links())
-
-
+    pass
+    
+   
     
