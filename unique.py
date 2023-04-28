@@ -5,7 +5,6 @@ class Unique:
     ignoring the fragmented parts of the url, and
     counts the number of unique urls.
     """
-
     url_set = set()
     url_counter = 0
     """
