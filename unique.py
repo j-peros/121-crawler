@@ -1,5 +1,4 @@
 class Unique:
-    count = 0 # counts number of times till write; 
     """
     Unique objects helps determine unique urls,
     ignoring the fragmented parts of the url, and
