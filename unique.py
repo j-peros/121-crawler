@@ -1,5 +1,3 @@
-from write_save_files import save_to_file
-
 class Unique:
     count = 0 # counts number of times till write; 
     """
@@ -39,16 +37,6 @@ class Unique:
         cls.url_set.add(new_url) #adds the unique url to the set
         
         return new_url
-
-    @classmethod
-    def counter(cls):
-        if cls.count < 250:
-            cls.count += 1
-        elif cls.count > 250:
-            cls.count = 1 # restart
-        else: # write after every 250 crawls
-            save_to_file()
-            cls.count += 1
 
 if __name__ == "__main__":
     pass

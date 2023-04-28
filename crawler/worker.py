@@ -35,7 +35,7 @@ class Worker(Thread):
                     self.frontier.mark_url_complete(tbd_url)
                     time.sleep(self.config.time_delay)
             except Exception as e:
-                print("Error when crawling:\n", e)
+                print("Error when crawling:\n", repr(e))
                 time.sleep(60) # server most likely down
             finally:
                 if not tbd_url: # finishes crawling if no url

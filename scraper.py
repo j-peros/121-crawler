@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from maxWordCount import *
 from ics_subdomains import icsSubdomains
 from low_text_info import low_textual_content
+from write_save_files import Counter
 import unique
 
 count = 0
@@ -13,10 +14,6 @@ def scraper(url, resp):
     return [link for link in links if is_valid(link)]
 
 def extract_next_links(url, resp):
-    if unique.Unique.hahacray < 5:
-        unique.Unique.hahacray += 1
-    else:
-        raise Exception("This is an exception")
     # Implementation required.
     # url: the URL that was used to get the page
     # resp.url: the actual url of the page
@@ -54,7 +51,7 @@ def extract_next_links(url, resp):
             continue
         extracted_links.add(cur_url[:cur_url.find('#')])
        
-    unique.Unique.counter() # increment counter
+    Counter.count_pages() # increment counter, write to files if necessary
     return list(extracted_links)
         
 def is_valid(url):
