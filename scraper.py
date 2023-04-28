@@ -1,17 +1,21 @@
 import re
+import nltk
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 from maxWordCount import *
 from ics_subdomains import icsSubdomains
+from low_text_info import low_textual_content
+import unique
+from nltk.corpus import stopwords
+
+stop_words = set(stopwords.words('english'))
+word_counter = {}
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
     return [link for link in links if is_valid(link)]
 
 def extract_next_links(url, resp):
-    if resp.status != 200 or resp.raw_response.content is None:
-        return list() # do something here
-    soup = BeautifulSoup(resp.raw_response.content, "html.parser")
     # Implementation required.
     # url: the URL that was used to get the page
     # resp.url: the actual url of the page
@@ -23,11 +27,41 @@ def extract_next_links(url, resp):
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
     
     # maxWord object to keep track of maxWords over all the webpages.
-    maxWord = maxWordCount()
     # tokenLst of all tokens of the current webpage being crawled.
+    
+    if resp.status >= 300 and resp.status < 400:
+        pass
+    if resp.status != 200 or resp.raw_response.content is None:
+        return list()
+    
+    soup = BeautifulSoup(resp.raw_response.content, "html.parser")
+    extracted_links = set()
+
+    maxWord = maxWordCount()
     tokenLst = maxWord.tokenizer(soup)
+
+    if not low_textual_content(tokenLst, soup.find_all()):
+        return list() # this page has low textual content
+    
     # Updates the maxWordCount if current webpage
     # has more words than the recorded maxWords.
+    # Filtes out stopwords and adds them to the word frequency dictionary
+
+    # Question 3
+    filteredLst = []
+    for t in tokenLst:
+        if t not in stop_words:
+            filteredLst.append(t)
+            if t in word_counter.keys():
+                word_counter[t] += 1
+            else:
+                word_counter[t] = 1
+    
+    dogs = top_words()
+    for d in dogs:
+        print(d)
+    maxWord.updateURL(filteredLst, resp.url)
+    
     maxWord.updateURL(tokenLst, resp.url)
     extracted_links = set()
     for link in soup.find_all('a'):
@@ -35,14 +69,15 @@ def extract_next_links(url, resp):
         if cur_url is None:
             continue
         extracted_links.add(cur_url[:cur_url.find('#')])
-        
+       
     return list(extracted_links)
-
+        
 def is_valid(url):
     # Decide whether to crawl this url or not. 
     # If you decide to crawl it, return True; otherwise return False.
     # There are already some conditions that return False.
     try:
+        url = unique.Unique.remove_fragment(url) # remove fragment from url
         parsed = urlparse(url)
         if parsed.scheme not in set(["http", "https"]):
             return False
@@ -62,3 +97,7 @@ def is_valid(url):
     except TypeError:
         print ("TypeError for ", parsed)
         raise
+
+def top_words():
+    sorted_words = sorted(word_counter.items(), key=lambda item: -item[1])
+    return sorted_words[0:50]
