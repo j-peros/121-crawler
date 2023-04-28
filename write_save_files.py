@@ -8,13 +8,13 @@ class Counter:
 
     @classmethod
     def count_pages(cls):
-        if cls.count < 10:
+        if cls.count < 75:
             cls.count += 1
             return False
-        elif cls.count > 10:
+        elif cls.count > 75:
             cls.count = 1 # restart
             return False
-        else: # write after every 250 crawls
+        else: # write after every 75 crawls
             save_to_file()
             cls.count += 1
             return True
@@ -23,7 +23,8 @@ def save_to_file() -> None:
     """ Saves files of all data in case of restart """
     with open("unique_save.txt", "w") as f:
         f.write(f"{unique.Unique.url_counter}\n")
-        f.writelines(unique.Unique.url_set)
+        for line in unique.Unique.url_set:
+            f.write(f"{line}\n")
     with open("maxWordCount_save.txt", "w") as f:
         f.write(f"{maxWordCount.maxWords}\n{maxWordCount.longestURL}")
     icsSubdomains.write_to_file()

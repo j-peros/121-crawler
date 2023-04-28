@@ -8,6 +8,7 @@ from low_text_info import low_textual_content
 from write_save_files import Counter
 import unique
 from nltk.corpus import stopwords
+import json
 
 stop_words = set(stopwords.words('english'))
 word_counter = {}
@@ -33,7 +34,8 @@ def extract_next_links(url, resp):
     # tokenLst of all tokens of the current webpage being crawled.
     
     if resp.status >= 300 and resp.status < 400:
-        pass
+        with open("redirects.txt", "a") as f:
+            f.write(f"err:{resp.error}, content: {resp.raw_response}")
     if resp.status != 200 or resp.raw_response.content is None:
         return list()
     
@@ -107,15 +109,12 @@ def top_words():
     sorted_words = sorted(word_counter.items(), key=lambda item: -item[1])
     return sorted_words[0:50]
 
-def write_words_to_file(filename: str = "frequency.txt"):
+def write_words_to_file(filename: str = "frequency.json"):
     # written here to have access to local variable word_counter
     with open(filename, "w") as f:
-        for key in word_counter:
-            f.write(f"{key}\t{word_counter[key]}")
+        json.dump(word_counter, f)
 
 def read_freq_from_file(filename: str = "frequency.txt"):
     # written here to have access to local variable word_counter
     with open(filename, "r") as f:
-        for line in f:
-            line = line.split('\t')
-            word_counter[line[0]] = int(line[1])
+        word_counter = json.load(f)
