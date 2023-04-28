@@ -6,11 +6,16 @@ from ics_subdomains import icsSubdomains
 from low_text_info import low_textual_content
 import unique
 
+
 def scraper(url, resp):
     links = extract_next_links(url, resp)
     return [link for link in links if is_valid(link)]
 
 def extract_next_links(url, resp):
+    if unique.Unique.counter >= 10:
+        raise Exception("Test")
+    else:
+        unique.Unique.counter += 1
     # Implementation required.
     # url: the URL that was used to get the page
     # resp.url: the actual url of the page

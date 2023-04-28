@@ -2,7 +2,7 @@ import ics_subdomains
 import unique
 import maxWordCount
 
-def shutting_down() -> None:
+def save_to_file() -> None:
     """ Saves files of all data in case of restart """
     with open("unique_save.txt", "w") as f:
         f.write(f"{unique.url_counter}\n")

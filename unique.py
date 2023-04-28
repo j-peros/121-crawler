@@ -1,4 +1,7 @@
+from write_save_files import save_to_file
+
 class Unique:
+    counter = 0 # counts number of times till write; 
     """
     Unique objects helps determine unique urls,
     ignoring the fragmented parts of the url, and
@@ -37,6 +40,15 @@ class Unique:
         
         return new_url
 
+    @classmethod
+    def counter(cls):
+        if cls.counter < 250:
+            cls.counter += 1
+        elif cls.counter > 250:
+            cls.counter = 1 # restart
+        else: # write after every 250 crawls
+            save_to_file()
+            cls.counter += 1
 
 if __name__ == "__main__":
     pass
