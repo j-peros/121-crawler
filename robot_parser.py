@@ -118,12 +118,11 @@ def matching_robots(link: str) -> bool:
     parser_disallow = disallowed(link, call_parser) #initiliazes the robot_parser class
     parser_allow = allowed(link, call_parser)
 
-    print(parser_allow)
-    
-    # if parser_disallow and not parser_allow:
-    #     return False
-    # else:
-    #     return True
+
+    if parser_disallow and not parser_allow:
+        return False
+    else:
+        return True
 
 def disallowed(link, parse_robots):
     root_url = parse_robots.sep_root_domain(link) #gets the root path
@@ -157,7 +156,8 @@ def allowed(link, parse_robots):
     #no links that matches
     return False
 if __name__ == "__main__":
-    pass
+    
+
     
    
     
