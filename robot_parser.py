@@ -1,6 +1,4 @@
-import urllib.request
-import io
-import os
+import urllib.request, io, os, re
 from urllib.parse import urlparse
 class Robot_Parse:
     robots_dict = {} #key of unique domains and mapped to a list of disallowed links
@@ -14,14 +12,14 @@ class Robot_Parse:
         contains robots.txt in the path. If it does, then calling
         insert_robots function will not be necessary. Otherwise, we need to call insert_robots.
         """
-        self.url = url #change the url depending if the url has a robots.txt in the path
+        self.url = self.sep_root_domain(url) #change the url depending if the url has a robots.txt in the path
         self.disallow_crawl = [] #list of links to not crawl
         self.allow_crawl = [] # list of links to crawl
         if self.url[-10:] != "robots.txt": # condition to see if it ends with robots.txt
             self.insert_robots()
-            self.url_copy = url #url without the robots.txt
+            self.url_copy = self.url #url without the robots.txt
         else:
-            self.url_copy = url[:-10]
+            self.url_copy = self.url[:-10]
         
     def insert_robots(self) -> None:
         """
@@ -48,7 +46,7 @@ class Robot_Parse:
         as a re expression. This can be used to match such
         expressions with other links.
         """
-        ast_replace = "\S*" # used to replace the asterix character
+        ast_replace = "(\S*)" # used to replace the asterix character
         crawl_mode = False # Used to only look at user-agent: *
         
         for lines in self.data: #loop through the robots.txt file
@@ -56,32 +54,44 @@ class Robot_Parse:
             if lines.startswith("User-agent: *") or lines.startswith("User-Agent: *"):
                 crawl_mode = True #turned to true once we reach the info about our crawler
             if crawl_mode and lines.startswith("Disallow: /"):
-                line = lines[10:].rstrip() #get rid of the "Disallow" /"
+                line = lines[11:].rstrip() #get rid of the "Disallow" /"
                 for char in line:
                     if char == "*":
                         insert_line += ast_replace #replace the asterix with our re expression
+                    elif char == ".":
+                        insert_line += "[.]"
+                    elif char == "?":
+                        insert_line += "[?]"
+                    elif char == "^":
+                        insert_line += "[^]"
                     else:
                         insert_line += char #include the char
                 #add the link to the disallowed list
                 if (line[-1] == "$"): #$ means that the expression must be at the end of the path
                     #expression so that this matches the subpath only at the end
-                    self.disallow_crawl.append(self.url_copy + "(" + insert_line[:-1] + ")$")
+                    self.disallow_crawl.append(os.path.join(self.url_copy, "(" + insert_line[:-1] + ")$"))
                 else:
-                    self.disallow_crawl.append(self.url_copy + insert_line)
+                    self.disallow_crawl.append(os.path.join(self.url_copy, insert_line))
 
             if crawl_mode and lines.startswith("Allow: /"):
-                line = lines[7:].rstrip() #get rid of the "Disallow" /"
+                line = lines[8:].rstrip() #get rid of the "Disallow" /"
                 for char in line:
                     if char == "*":
                         insert_line += ast_replace #replace the asterix with our re expression
+                    elif char == ".":
+                        insert_line += "[.]"
+                    elif char == "?":
+                        insert_line += "[?]"
+                    elif char == "^":
+                        insert_line += "[^]"
                     else:
                         insert_line += char #include the char
                 #add the link to the disallowed list
-                if (line[-1] == "$"): #$ means that the expression must be at the end of the path
+                if (lines.rstrip()[-1] == "$"): #$ means that the expression must be at the end of the path
                     #expression so that this matches the subpath only at the end
-                    self.allow_crawl.append(self.url_copy + "(" + insert_line[:-1] + ")$")
+                    self.allow_crawl.append(os.path.join(self.url_copy, "(" + insert_line[:-1] + ")$"))
                 else:
-                    self.allow_crawl.append(self.url_copy + insert_line)
+                    self.allow_crawl.append(os.path.join(self.url_copy, insert_line))
     
             if crawl_mode and lines == "\n": #done parsing
                 break
@@ -99,21 +109,33 @@ class Robot_Parse:
         # returns a list of links that allows crawling
         return self.allow_crawl
 
-    def sep_root_domain(self) -> str:
+    def sep_root_domain(self, given_url: str) -> str:
         # This function separates the link to only return the scheme and domain
-        parse_link = urlparse(self.url_copy)
-        return os.path.join(parse_link.scheme + ":", parse_link.netloc)
-    
-    def check_existing_links(self):
-        
+        parse_link = urlparse(given_url)
+        return parse_link.scheme + "://" + parse_link.netloc
 
 def matching_robots(link: str) -> bool:
+
     parse_robots = Robot_Parse(link)
-    parse_robots.robots_request()
-    parse_robots.robots_read()
+    root_url = parse_robots.sep_root_domain(link)
+    if root_url in parse_robots.robots_dict.keys():
+        for links in parse_robots.robots_dict[root_url]:
+            if re.match(links, link):
+                return True
+    else:
+        parse_robots.robots_request()
+        parse_robots.robots_read()
+        parse_robots.robots_dict[parse_robots] = parse_robots.disallow_crawl_links()
+        for links in parse_robots.disallow_crawl_links():
+            print(links)
+            if re.match(links, link):
+                return True
+
+    
+    return False
 
 if __name__ == "__main__":
+    print(matching_robots("https://www.stat.uci.edu/wp-admin/"))
     
-    
-
+   
     
