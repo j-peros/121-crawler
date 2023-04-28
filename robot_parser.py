@@ -118,7 +118,6 @@ def matching_robots(link: str) -> bool:
     parser_disallow = disallowed(link, call_parser) #initiliazes the robot_parser class
     parser_allow = allowed(link, call_parser)
 
-
     if parser_disallow and not parser_allow:
         return False
     else:
@@ -144,20 +143,19 @@ def allowed(link, parse_robots):
     root_url = parse_robots.sep_root_domain(link) #gets the root path
     if root_url in parse_robots.robots_all.keys(): #determines if the root path already exists in dict
         for links in parse_robots.robots_all[root_url]: #loops through the allowed links
-            if re.match(links, link): #matches the allowed link to given link
+            if re.match(links, link) and links[-1] != "/": #matches the allowed link to given link
                 return True
     else:
         parse_robots.robots_request() #server creates a new request to the web
         parse_robots.robots_read()#reads the robots.txt file
         parse_robots.robots_all[parse_robots] = parse_robots.allow_crawl_links() #adds a allowed list
         for links in parse_robots.allow_crawl_links(): #loops through allowed links
-            if re.match(links, link): #sees if the allowed link matches
+            if re.match(links, link) and links[-1] != "/": #sees if the allowed link matches
                 return True
     #no links that matches
     return False
 if __name__ == "__main__":
-    
-
+    pass
     
    
     
