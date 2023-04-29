@@ -5,6 +5,7 @@ from maxWordCount import *
 from ics_subdomains import icsSubdomains
 from low_text_info import low_textual_content
 import unique
+from textualSimilarity import *
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
@@ -36,9 +37,24 @@ def extract_next_links(url, resp):
 
     maxWord = maxWordCount()
     tokenLst = maxWord.tokenizer(soup)
-
+        
     if not low_textual_content(tokenLst, soup.find_all()):
         return list() # this page has low textual content
+
+    # create a simhash object
+    simHashes = simHash()
+    # # Map the tokens to simHash Dictionary for current webpage.
+    simHashes.tokenDictionaryMapper(tokenLst)
+    # print(simHashes.tokenDict)
+    # Find the finger print of the current webpage
+    currentFingerPrint = simHashes.simHashFingerprint()
+    # iterate over the simHashSet to see if two webpages are similar.
+    for simHash2 in simHashes.simHashSet:
+        # If they are, then add the finger print to the set,stop crawling, and return an empty list
+        if (simHashes.similarityChecker(currentFingerPrint, simHash2)):
+            return list()
+    # Otherwise, add the fingerprint anyway, and continue crawling.
+    simHashes.simHashSet.add(currentFingerPrint)
     
     maxWord.updateURL(tokenLst, resp.url)
     extracted_links = set()
