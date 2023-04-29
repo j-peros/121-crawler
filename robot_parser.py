@@ -53,8 +53,7 @@ class Robot_Parse:
             if lines.startswith("User-agent: *") or lines.startswith("User-Agent: *"):
                 crawl_mode = True #turned to true once we reach the info about our crawler
             if crawl_mode and lines.startswith("Disallow: /"):
-                line = lines[11:].rstrip() #get rid of the "Disallow" /"
-                for char in line:
+                for char in lines[11:].rstrip():
                     if char == "*":
                         insert_line += ast_replace #replace the asterix with our re expression
                     elif char == ".":
@@ -66,15 +65,14 @@ class Robot_Parse:
                     else:
                         insert_line += char #include the char
                 #add the link to the disallowed list
-                if (line[-1] == "$"): #$ means that the expression must be at the end of the path
+                if (lines.rstrip()[-1] == "$"): #$ means that the expression must be at the end of the path
                     #expression so that this matches the subpath only at the end
                     self.disallow_crawl.append(os.path.join(self.url_copy, "(" + insert_line[:-1] + ")$"))
                 else:
                     self.disallow_crawl.append(os.path.join(self.url_copy, insert_line))
 
             if crawl_mode and lines.startswith("Allow: /"):
-                line = lines[8:].rstrip() #get rid of the "Disallow" /"
-                for char in line:
+                for char in lines[8:].rstrip():
                     if char == "*":
                         insert_line += ast_replace #replace the asterix with our re expression
                     elif char == ".":
