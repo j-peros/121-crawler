@@ -8,6 +8,7 @@ from low_text_info import low_textual_content
 import unique
 from textualSimilarity import *
 from nltk.corpus import stopwords
+nltk.download('stopwords')
 from robot_parser import matching_robots
 stop_words = set(stopwords.words('english'))
 word_counter = {}
