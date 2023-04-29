@@ -1,4 +1,5 @@
 import re
+import nltk
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 from maxWordCount import *
@@ -6,6 +7,10 @@ from ics_subdomains import icsSubdomains
 from low_text_info import low_textual_content
 import unique
 from textualSimilarity import *
+from nltk.corpus import stopwords
+from robot_parser import matching_robots
+stop_words = set(stopwords.words('english'))
+word_counter = {}
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
@@ -24,8 +29,6 @@ def extract_next_links(url, resp):
     
     # maxWord object to keep track of maxWords over all the webpages.
     # tokenLst of all tokens of the current webpage being crawled.
-    # Updates the maxWordCount if current webpage
-    # has more words than the recorded maxWords.
     
     if resp.status >= 300 and resp.status < 400:
         pass
@@ -43,9 +46,8 @@ def extract_next_links(url, resp):
 
     # create a simhash object
     simHashes = simHash()
-    # # Map the tokens to simHash Dictionary for current webpage.
+    # Map the tokens to simHash Dictionary for current webpage.
     simHashes.tokenDictionaryMapper(tokenLst)
-    # print(simHashes.tokenDict)
     # Find the finger print of the current webpage
     currentFingerPrint = simHashes.simHashFingerprint()
     # iterate over the simHashSet to see if two webpages are similar.
@@ -55,6 +57,23 @@ def extract_next_links(url, resp):
             return list()
     # Otherwise, add the fingerprint anyway, and continue crawling.
     simHashes.simHashSet.add(currentFingerPrint)
+    
+    # Updates the maxWordCount if current webpage
+    # has more words than the recorded maxWords.
+    # Filtes out stopwords and adds them to the word frequency dictionary
+
+    # Question 3
+    filteredLst = []
+    for t in tokenLst:
+        if t not in stop_words:
+            filteredLst.append(t)
+            if t in word_counter.keys():
+                word_counter[t] += 1
+            else:
+                word_counter[t] = 1
+    
+    dogs = top_words()
+    maxWord.updateURL(filteredLst, resp.url)
     
     maxWord.updateURL(tokenLst, resp.url)
     extracted_links = set()
@@ -88,6 +107,11 @@ def is_valid(url):
             + r"|thmx|mso|arff|rtf|jar|csv"
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
 
+        return matching_robots(url)
     except TypeError:
         print ("TypeError for ", parsed)
         raise
+
+def top_words():
+    sorted_words = sorted(word_counter.items(), key=lambda item: -item[1])
+    return sorted_words[0:50]
