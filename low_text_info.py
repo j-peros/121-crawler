@@ -1,4 +1,4 @@
-def low_textual_content(tokenLst: list, tagLst: list, *, decimal_percentage:int = 0.98) -> bool:
+def low_textual_content(tokenLst: list, tagLst: list, *, decimal_percentage:int = 0.95) -> bool:
     """ Low textual content can be described as 97% - 3% html-text ratio """
     len_tokens = len(tokenLst)
     len_html = len(tagLst)
