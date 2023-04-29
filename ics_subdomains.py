@@ -8,8 +8,9 @@ class icsSubdomains:
     subdomainDict = {} # key: directory -> val: counter
 
     @classmethod
-    def addToSubdomain(cls, link:urlparse) -> None:
+    def addToSubdomain(cls, link:str) -> None:
         """ If a subdomain exists and has not been found before, add it to this dictionary. If it has been found, increment the counter for that subdomain. """
+        link = urlparse(link)
         path_subdomain = re.sub("\/[^\/]*$", "", link.path)
         subdomain = link.netloc + path_subdomain + '/'
 
