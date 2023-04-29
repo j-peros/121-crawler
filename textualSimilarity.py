@@ -45,8 +45,6 @@ class simHash():
             vector.append(number)
         # Declare the fingerprint string
         cls.tokenDict = dict()
-        # return sum(vector)
-        print(vector)
         fingerPrint = ""
         for num in vector:
             # Iterate over the vector with 8 integers. Re-convert into binary
