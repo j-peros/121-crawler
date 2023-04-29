@@ -7,7 +7,7 @@ from ics_subdomains import icsSubdomains
 from low_text_info import low_textual_content
 import unique
 from nltk.corpus import stopwords
-
+#from robot_parser import matching_robots
 stop_words = set(stopwords.words('english'))
 word_counter = {}
 
@@ -94,6 +94,7 @@ def is_valid(url):
             + r"|thmx|mso|arff|rtf|jar|csv"
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
 
+        return matching_robots(url)
     except TypeError:
         print ("TypeError for ", parsed)
         raise
