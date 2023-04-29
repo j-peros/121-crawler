@@ -7,7 +7,7 @@ from ics_subdomains import icsSubdomains
 from low_text_info import low_textual_content
 import unique
 from nltk.corpus import stopwords
-
+from robot_parser import matching_robots
 stop_words = set(stopwords.words('english'))
 word_counter = {}
 
@@ -58,8 +58,6 @@ def extract_next_links(url, resp):
                 word_counter[t] = 1
     
     dogs = top_words()
-    for d in dogs:
-        print(d)
     maxWord.updateURL(filteredLst, resp.url)
     
     maxWord.updateURL(tokenLst, resp.url)
