@@ -1,5 +1,6 @@
 import re
 from urllib.parse import urlparse
+import json
 # for tracking question #4
 
 class icsSubdomains:
@@ -18,3 +19,17 @@ class icsSubdomains:
             cls.subdomainDict[subdomain] += 1
         except KeyError: # directory does not exist
             cls.subdomainDict[subdomain] = 1
+
+    @classmethod
+    def write_to_file(cls, filename = "subdomain_dictionary") -> None: # Prep for restart
+        assert type(filename) is str # name should be a string
+        filename += ".json"
+        with open(filename, "w") as f:
+            json.dump(cls.subdomainDict, f)
+
+    @classmethod
+    def read_from_file(cls, filename = "subdomain_dictionary") -> None: # Restart
+        assert type(filename) is str 
+        filename += ".json"
+        with open(filename, "r") as f:
+            cls.subdomainDict = json.load(f)
