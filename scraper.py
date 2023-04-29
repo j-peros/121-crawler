@@ -81,6 +81,8 @@ def is_valid(url):
             return False
         if not re.match('\S*.ics.uci.edu$|\S*.cs.uci.edu$|\S*.informatics.uci.edu$|\S*.stat.uci.edu$', parsed.netloc):
             return False # \S* matches any character before, so we don't have to worry if www is there or not, and $ makes sure the domain ends after that
+        if not (matching_robots(url)):
+            return False
         icsSubdomains.addToSubdomain(parsed) # counts the found pages, rather than the crawled pages
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
@@ -91,8 +93,6 @@ def is_valid(url):
             + r"|epub|dll|cnf|tgz|sha1"
             + r"|thmx|mso|arff|rtf|jar|csv"
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
-
-        return matching_robots(url)
     except TypeError:
         print ("TypeError for ", parsed)
         raise
