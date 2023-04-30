@@ -18,7 +18,7 @@ def create_report() -> None:
         report.write(f"3. \n")
         #writing the pair of subdomains and number of unique pages detected
         report.write("""4. Here is a list of all the subdomains found in the ics.uci.edu domain in alphabetical order, 
-                    along with the number of unique pages detected in each subdomain:\n""")
+        along with the number of unique pages detected in each subdomain:\n""")
         for key, value in icsSubdomains.subdomainDict.items():
             report.write(f"{key}, {value}\n")
     report.close()

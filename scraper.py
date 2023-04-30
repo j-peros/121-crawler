@@ -1,10 +1,12 @@
 import re
 import nltk
+import json
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 from maxWordCount import *
 from ics_subdomains import icsSubdomains
 from low_text_info import low_textual_content
+from write_save_files import Counter
 import unique
 from nltk.corpus import stopwords
 from robot_parser import matching_robots
@@ -30,7 +32,8 @@ def extract_next_links(url, resp):
     # tokenLst of all tokens of the current webpage being crawled.
     
     if resp.status >= 300 and resp.status < 400:
-        pass
+        with open("redirects.txt", "a") as f:
+            f.write(f"err:{resp.error}, content: {resp.raw_response}")
     if resp.status != 200 or resp.raw_response.content is None:
         return list()
     
@@ -57,10 +60,23 @@ def extract_next_links(url, resp):
             else:
                 word_counter[t] = 1
     
-    dogs = top_words()
     maxWord.updateURL(filteredLst, resp.url)
     
-    maxWord.updateURL(tokenLst, resp.url)
+    # create a simhash object
+    simHashes = simHash()
+    # Map the tokens to simHash Dictionary for current webpage.
+    simHashes.tokenDictionaryMapper(filteredLst)
+    # Find the finger print of the current webpage
+    currentFingerPrint = simHashes.simHashFingerprint()
+    # iterate over the simHashSet to see if two webpages are similar.
+    for simHash2 in simHashes.simHashSet:
+        # If they are, then add the finger print to the set,stop crawling, and return an empty list
+        if (simHashes.similarityChecker(currentFingerPrint, simHash2)):
+            return list()
+    # Otherwise, add the fingerprint anyway, and continue crawling.
+    simHashes.simHashSet.add(currentFingerPrint)
+    
+    
     extracted_links = set()
     for link in soup.find_all('a'):
         cur_url = link.get('href')
@@ -68,6 +84,10 @@ def extract_next_links(url, resp):
             continue
         extracted_links.add(cur_url[:cur_url.find('#')])
        
+    if Counter.count_pages(): # increment counter, write to files if necessary
+        write_words_to_file()
+    # write local variable to a txt file
+    # print(Counter.count)
     return list(extracted_links)
         
 def is_valid(url):
@@ -100,3 +120,13 @@ def is_valid(url):
 def top_words():
     sorted_words = sorted(word_counter.items(), key=lambda item: -item[1])
     return sorted_words[0:50]
+
+def write_words_to_file(filename: str = "frequency.json"):
+    # written here to have access to local variable word_counter
+    with open(filename, "w") as f:
+        json.dump(word_counter, f)
+
+def read_freq_from_file(filename: str = "frequency.json"):
+    # written here to have access to local variable word_counter
+    with open(filename, "r") as f:
+        word_counter = json.load(f)
