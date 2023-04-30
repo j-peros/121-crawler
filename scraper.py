@@ -45,8 +45,10 @@ def extract_next_links(url, resp):
     # tokenLst of all tokens of the current webpage being crawled.
     
     if resp.status >= 300 and resp.status < 400:
-        with open("redirects.txt", "a") as f:
-            f.write(f"err:{resp.error}, content: {resp.raw_response}")
+        try:
+            return [resp.raw_response.url] # return the new? URL
+        except:
+            pass # will just get skipped
     if resp.status != 200 or resp.raw_response.content is None:
         return list()
     
