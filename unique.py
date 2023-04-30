@@ -1,3 +1,5 @@
+import ics_subdomains
+
 class Unique:
     """
     Unique objects helps determine unique urls,
@@ -6,6 +8,7 @@ class Unique:
     """
     url_set = set()
     url_counter = 0
+    delete = 0
     """
     Initializer will set up a url set container
     that stores all the unique urls and initialize the
@@ -31,11 +34,11 @@ class Unique:
        
         if new_url not in cls.url_set: #increments the unique url counter if not in container
             cls.url_counter += 1
+            ics_subdomains.icsSubdomains.addToSubdomain(new_url) # count number of new domains found
         
         cls.url_set.add(new_url) #adds the unique url to the set
         
         return new_url
-
 
 if __name__ == "__main__":
     pass

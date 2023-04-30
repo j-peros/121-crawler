@@ -34,7 +34,6 @@ class maxWordCount():
             cls.maxWords = len(token_lst)
             cls.longestURL = url
             
-        
             
 if __name__ == "__main__":
     pass

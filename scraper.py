@@ -1,19 +1,33 @@
 import re
 import nltk
+import json
+import unique
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 from maxWordCount import *
 from ics_subdomains import icsSubdomains
 from low_text_info import low_textual_content
-import unique
+from write_save_files import Counter
+from textualSimilarity import *
 from nltk.corpus import stopwords
+import robotCheck
+
+nltk.download('stopwords')
 from robot_parser import matching_robots
 stop_words = set(stopwords.words('english'))
 word_counter = {}
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
-    return [link for link in links if is_valid(link)]
+    valid_links = []
+    for link in links:
+        if is_valid(link):
+            domain = urlparse(link).netloc # domain
+            sitemap_links = robotCheck.RobotCheck.get_sitemap(domain)
+            sitemap_links.append(link) # list of sitemaps + next valid link
+            valid_links += sitemap_links
+            # print(link, ":", sitemap_links) # use this to test and see what links are added
+    return valid_links
 
 def extract_next_links(url, resp):
     # Implementation required.
@@ -30,7 +44,10 @@ def extract_next_links(url, resp):
     # tokenLst of all tokens of the current webpage being crawled.
     
     if resp.status >= 300 and resp.status < 400:
-        pass
+        try:
+            return [resp.raw_response.url] # return the new? URL
+        except:
+            pass # will just get skipped
     if resp.status != 200 or resp.raw_response.content is None:
         return list()
     
@@ -57,10 +74,23 @@ def extract_next_links(url, resp):
             else:
                 word_counter[t] = 1
     
-    dogs = top_words()
     maxWord.updateURL(filteredLst, resp.url)
     
-    maxWord.updateURL(tokenLst, resp.url)
+    # create a simhash object
+    simHashes = simHash()
+    # Map the tokens to simHash Dictionary for current webpage.
+    simHashes.tokenDictionaryMapper(filteredLst)
+    # Find the finger print of the current webpage
+    currentFingerPrint = simHashes.simHashFingerprint()
+    # iterate over the simHashSet to see if two webpages are similar.
+    for simHash2 in simHashes.simHashSet:
+        # If they are, then add the finger print to the set,stop crawling, and return an empty list
+        if (simHashes.similarityChecker(currentFingerPrint, simHash2)):
+            return list()
+    # Otherwise, add the fingerprint anyway, and continue crawling.
+    simHashes.simHashSet.add(currentFingerPrint)
+    
+    
     extracted_links = set()
     for link in soup.find_all('a'):
         cur_url = link.get('href')
@@ -68,6 +98,10 @@ def extract_next_links(url, resp):
             continue
         extracted_links.add(cur_url[:cur_url.find('#')])
        
+    if Counter.count_pages(): # increment counter, write to files if necessary
+        write_words_to_file()
+    # write local variable to a txt file
+    # print(Counter.count)
     return list(extracted_links)
         
 def is_valid(url):
@@ -82,7 +116,8 @@ def is_valid(url):
         if not re.match('\S*.ics.uci.edu$|\S*.cs.uci.edu$|\S*.informatics.uci.edu$|\S*.stat.uci.edu$', parsed.netloc):
             return False # \S* matches any character before, so we don't have to worry if www is there or not, and $ makes sure the domain ends after that
 
-        icsSubdomains.addToSubdomain(parsed) # counts the found pages, rather than the crawled pages
+        if not robotCheck.RobotCheck.checkURL(parsed.scheme, parsed.netloc, url): # check robots.txt if this is crawlable
+            return False
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
@@ -100,3 +135,13 @@ def is_valid(url):
 def top_words():
     sorted_words = sorted(word_counter.items(), key=lambda item: -item[1])
     return sorted_words[0:50]
+
+def write_words_to_file(filename: str = "frequency.json"):
+    # written here to have access to local variable word_counter
+    with open(filename, "w") as f:
+        json.dump(word_counter, f)
+
+def read_freq_from_file(filename: str = "frequency.json"):
+    # written here to have access to local variable word_counter
+    with open(filename, "r") as f:
+        word_counter = json.load(f)
