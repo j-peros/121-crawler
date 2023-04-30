@@ -10,6 +10,7 @@ from write_save_files import Counter
 import unique
 from nltk.corpus import stopwords
 from robot_parser import matching_robots
+from textualSimilarity import simHash
 stop_words = set(stopwords.words('english'))
 word_counter = {}
 
