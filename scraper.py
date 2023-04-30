@@ -1,13 +1,13 @@
 import re
 import nltk
 import json
+import unique
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 from maxWordCount import *
 from ics_subdomains import icsSubdomains
 from low_text_info import low_textual_content
 from write_save_files import Counter
-import unique
 from textualSimilarity import *
 from nltk.corpus import stopwords
 nltk.download('stopwords')
@@ -104,8 +104,8 @@ def is_valid(url):
         if not re.match('\S*.ics.uci.edu$|\S*.cs.uci.edu$|\S*.informatics.uci.edu$|\S*.stat.uci.edu$', parsed.netloc):
             return False # \S* matches any character before, so we don't have to worry if www is there or not, and $ makes sure the domain ends after that
 
-        if not (matching_robots(url)):
-            return False
+        # if not (matching_robots(url)):
+        #     return False
 
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
