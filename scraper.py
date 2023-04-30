@@ -10,6 +10,8 @@ from low_text_info import low_textual_content
 from write_save_files import Counter
 from textualSimilarity import *
 from nltk.corpus import stopwords
+import robotCheck
+
 nltk.download('stopwords')
 from robot_parser import matching_robots
 stop_words = set(stopwords.words('english'))
@@ -17,7 +19,15 @@ word_counter = {}
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
-    return [link for link in links if is_valid(link)]
+    valid_links = []
+    for link in links:
+        if is_valid(link):
+            domain = urlparse(link).netloc # domain
+            sitemap_links = robotCheck.RobotCheck.get_sitemap(domain)
+            sitemap_links.append(link) # list of sitemaps + next valid link
+            valid_links += sitemap_links
+            # print(link, ":", sitemap_links) # use this to test and see what links are added
+    return valid_links
 
 def extract_next_links(url, resp):
     # Implementation required.
@@ -34,8 +44,10 @@ def extract_next_links(url, resp):
     # tokenLst of all tokens of the current webpage being crawled.
     
     if resp.status >= 300 and resp.status < 400:
-        with open("redirects.txt", "a") as f:
-            f.write(f"err:{resp.error}, content: {resp.raw_response}")
+        try:
+            return [resp.raw_response.url] # return the new? URL
+        except:
+            pass # will just get skipped
     if resp.status != 200 or resp.raw_response.content is None:
         return list()
     
@@ -104,9 +116,8 @@ def is_valid(url):
         if not re.match('\S*.ics.uci.edu$|\S*.cs.uci.edu$|\S*.informatics.uci.edu$|\S*.stat.uci.edu$', parsed.netloc):
             return False # \S* matches any character before, so we don't have to worry if www is there or not, and $ makes sure the domain ends after that
 
-        # if not (matching_robots(url)):
-        #     return False
-
+        if not robotCheck.RobotCheck.checkURL(parsed.scheme, parsed.netloc, url): # check robots.txt if this is crawlable
+            return False
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
