@@ -1,6 +1,8 @@
 from ics_subdomains import icsSubdomains
 import unique
 from maxWordCount import maxWordCount
+import scraper
+import json
 
 class Counter:
 
@@ -33,10 +35,12 @@ def save_to_file() -> None:
 def restarting_crawler() -> None:
     """ Adds data back in case of restart. """
     with open("unique_save.txt", "r") as f:
-        Unique.url_counter = int(f.readline())
+        unique.Unique.url_counter = int(f.readline())
         for link in f:
-            Unique.url_set.add(link)
+            unique.Unique.url_set.add(link)
     with open("maxWordCount_save.txt", "r") as f:
         maxWordCount.maxWords = int(f.readline())
         maxWordCount.longestURL = f.readline()
     icsSubdomains.read_from_file()
+    with open("frequency.json", "r") as f:
+        scraper.word_counter = json.load(f)

@@ -140,8 +140,3 @@ def write_words_to_file(filename: str = "frequency.json"):
     # written here to have access to local variable word_counter
     with open(filename, "w") as f:
         json.dump(word_counter, f)
-
-def read_freq_from_file(filename: str = "frequency.json"):
-    # written here to have access to local variable word_counter
-    with open(filename, "r") as f:
-        word_counter = json.load(f)
