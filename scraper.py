@@ -2,7 +2,7 @@ import re
 import nltk
 import json
 import unique
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup
 from maxWordCount import *
 from ics_subdomains import icsSubdomains
@@ -93,9 +93,10 @@ def extract_next_links(url, resp):
     
     extracted_links = set()
     for link in soup.find_all('a'):
-        cur_url = link.get('href')
+        cur_url = link.get('href') # cur_url /home /about
         if cur_url is None:
             continue
+        cur_url = urljoin(url, cur_url) # urljoin(base, nextpage)
         extracted_links.add(cur_url[:cur_url.find('#')])
        
     if Counter.count_pages(): # increment counter, write to files if necessary
