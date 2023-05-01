@@ -18,11 +18,10 @@ def create_report() -> None:
         # writing the 50 most common words besides stop words
         fiftyCommonLst = scraper.top_words()
         report.write(f"3. The 50 most common words across all webpages crawled are:\n")
-        for index in range(len(fiftyCommonLst)):
-            report.write(f"{index}. {fiftyCommonLst[index]}, frequency = {scraper.word_counter[fiftyCommonLst[index]]}.\n")
+        for index in range(0, len(fiftyCommonLst)):
+                report.write(f"\t{index + 1}. {fiftyCommonLst[index][0]}, frequency = {fiftyCommonLst[index][1]}.\n")
         # writing the pair of subdomains and number of unique pages detected
-        report.write("""4. Here is a list of all the subdomains found in the ics.uci.edu domain in alphabetical order, 
-                    along with the number of unique pages detected in each subdomain:\n""")
+        report.write("""4. Here is a list of all the subdomains found in the ics.uci.edu domain in alphabetical order, along with the number of unique pages detected in each subdomain:\n""")
         for key, value in icsSubdomains.subdomainDict.items():
-            report.write(f"{key}, {value}\n")
+            report.write(f"\t{key}, {value}\n")
     report.close()
