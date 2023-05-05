@@ -16,7 +16,7 @@ class icsSubdomains:
 
         # Strips the page, and returns [site]/[most recent directory]"""
         # i.e. www.ics.uci.edu.com/about/us -> www.ics.uci.edu.com/about/
-        if link.scheme in set(["http", "https"]) and re.match('\S*.ics.uci.edu$|\S*.cs.uci.edu$|\S*.informatics.uci.edu$|\S*.stat.uci.edu$', link.netloc):    
+        if link.scheme in set(["http", "https"]) and re.match('\S*.ics.uci.edu$', link.netloc):    
             try:
                 cls.subdomainDict[subdomain] += 1
             except KeyError: # directory does not exist
