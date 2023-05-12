@@ -7,9 +7,11 @@ import json
 class Counter:
 
     count = 0
+    urls_crawled = 0
 
     @classmethod
     def count_pages(cls):
+        cls.urls_crawled += 1
         if cls.count < 75:
             cls.count += 1
             return False
